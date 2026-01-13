@@ -697,38 +697,35 @@
                                 </div>
                                 
                                 <!-- بەشی نوێ: یەکلاکردنەوە لەگەڵ سیستەمی پەیمانگا -->
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <i class="fas fa-exchange-alt me-2"></i>یەکلاکردنەوە لەگەڵ سیستەمی پەیمانگا
-                                    </div>
-                                    <div class="card-body api-section">
-                                        <h6 class="mb-3">ڕێکخستنی API</h6>
-                                        <div class="mb-3">
-                                            <label for="instituteApiUrl" class="form-label">ناونیشانی APIی سیستەمی پەیمانگا</label>
-                                            <input type="text" class="form-control" id="instituteApiUrl" 
-                                                   placeholder="https://your-institute-api.vercel.app/api">
-                                            <small class="text-muted">نمونە: https://institute-soran-api.vercel.app/api</small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="apiToken" class="form-label">تۆکینی API</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="apiToken" 
-                                                       placeholder="تۆکینی API بنووسە...">
-                                                <button class="btn btn-outline-secondary" type="button" id="showApiTokenBtn">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                            <small class="text-muted">تۆکینەکە لە سیستەمی پەیمانگا دەستت دەکەوێت</small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="syncInterval" class="form-label">کاتی یەکلاکردنەوە</label>
-                                            <select class="form-select" id="syncInterval">
-                                                <option value="manual">دەستی</option>
-                                                <option value="daily">ڕۆژانە</option>
-                                                <option value="weekly">هەفتانە</option>
-                                                <option value="monthly">مانگانە</option>
-                                            </select>
-                                        </div>
+   <!-- لە ناوەڕۆکی HTMLدا، لە بەشی ڕێکخستن -->
+<div class="card mb-4"> 
+    <div class="card-header"> 
+        <i class="fas fa-exchange-alt me-2"></i>یەکلاکردنەوە لەگەڵ سیستەمی مامۆستا
+    </div> 
+    <div class="card-body api-section">
+        <h6 class="mb-3">APIی سیستەمی پەیمانگا</h6>
+        <div class="mb-3">
+            <label for="apiEndpoint" class="form-label">ئەندپۆینتی API</label>
+            <input type="text" class="form-control" id="apiEndpoint" 
+                   value="https://paymangaysoranmder.vercel.app/api" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="apiToken" class="form-label">تۆکینی API</label>
+            <div class="input-group">
+                <input type="password" class="form-control" id="apiToken" 
+                       value="institute_api_token_2024_soran" readonly>
+                <button class="btn btn-outline-secondary" type="button" id="showApiToken">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-outline-primary" type="button" id="copyApiToken">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <small class="text-muted">ئەم تۆکینە دەبێت لە سیستەمی مامۆستا بەکاربهێنرێت</small>
+        </div>
+    </div> 
+</div>
+                        
                                         <div class="mb-3">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" id="autoSync" checked>
