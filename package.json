@@ -1,18 +1,30 @@
 {
-  "name": "soran-institute-system",
-  "version": "1.0.0",
-  "description": "سیستەمی بەڕێوەبردنی پەیمانگای سۆران",
-  "main": "index.html",
-  "scripts": {
-    "dev": "vercel dev",
-    "start": "vercel start",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "@vercel/node": "^2.9.0"
-  },
-  "engines": {
-    "node": ">=14.x"
-  },
-  "license": "MIT"
+  "students": [
+    {
+      "id": "123456789",
+      "name": "ناوی قوتابی",
+      "fatherName": "ناوی باوک",
+      "grandfatherName": "ناوی باپیر",
+      "phone": "ژمارەی مۆبایل",
+      "group": "A",
+      "level": "1",
+      "photo": "data:image/png;base64,..."
+    }
+  ],
+  "attendance": [
+    {
+      "id": "123456789-2024-01-15-وانە",
+      "studentId": "123456789",
+      "studentName": "ناوی قوتابی",
+      "date": "2024-01-15",
+      "course": "وانە",
+      "present": true,
+      "photo": "data:image/png;base64,...",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "autoMarked": false
+    }
+  ],
+  "backupDate": "2024-01-15T10:30:00.000Z",
+  "sourceSystem": "سیستەمی مامۆستا",
+  "version": "1.0"
 }
