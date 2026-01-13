@@ -244,6 +244,56 @@
             justify-content: center;
             font-size: 12px;
         }
+        
+        /* API Send Styles */
+        .api-send-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .api-status {
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .api-sending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .api-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .api-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .send-progress {
+            height: 20px;
+            border-radius: 10px;
+            background: #e9ecef;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .send-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4e73df 0%, #224abe 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +419,19 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="todayBtn">ئەمڕۆ</button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" id="datePickerBtn">بەرواری دیاریکراو</button>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- API Send Section -->
+                        <div class="api-send-section">
+                            <h4><i class="fas fa-paper-plane me-2"></i>ناردنی بەکەپ بۆ سیستەمی پەیمانگا</h4>
+                            <p>زانیاریەکانی غیابات و قوتابیان بنێرە بۆ سیستەمی پەیمانگای سۆران</p>
+                            <button class="btn btn-light btn-lg" id="sendBackupBtn">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>ناردنی بەکەپ
+                            </button>
+                            <div id="apiStatusMessage" style="margin-top: 10px;"></div>
+                            <div class="send-progress" id="sendProgress" style="display: none;">
+                                <div class="send-progress-bar" id="sendProgressBar"></div>
                             </div>
                         </div>
                         
@@ -642,6 +705,43 @@
                                     </div>
                                 </div>
                                 
+                                <!-- API Send Control -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        ناردنی بەکەپ بۆ سیستەمی پەیمانگا
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">ناونیشانی سیستەمی پەیمانگا</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="instituteApiUrl" 
+                                                       value="https://paymangaysoranmder.vercel.app/api/backup">
+                                                <button class="btn btn-outline-secondary" type="button" 
+                                                        onclick="copyApiUrl()">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">دۆخی پەیوەندی</label>
+                                            <div id="connectionStatus" class="api-status api-sending">
+                                                <i class="fas fa-circle me-1"></i>
+                                                پەیوەندی تاقینەکراوە
+                                            </div>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-success" id="sendBackupSettingsBtn">
+                                                <i class="fas fa-paper-plane me-2"></i>ناردنی بەکەپ
+                                            </button>
+                                            <button class="btn btn-outline-info" onclick="testInstituteConnection()">
+                                                <i class="fas fa-plug me-2"></i>تاقیکردنەوەی پەیوەندی
+                                            </button>
+                                        </div>
+                                        <p class="text-muted mt-2 small">ئەمە باکەپی خۆکارانە دەنێرێت بۆ سیستەمی پەیمانگا و زانیاریەکان زیاد دەکات.</p>
+                                    </div>
+                                </div>
+                                
                                 <div class="card">
                                     <div class="card-header">
                                         بارکردنی زانیاری لە سیستەمەکانی تر
@@ -673,6 +773,10 @@
         let currentStream = null;
         let currentStudentForCamera = null;
         
+        // API Configuration
+        const INSTITUTE_API_URL = "https://paymangaysoranmder.vercel.app/api/backup";
+        let apiConnectionStatus = "disconnected";
+        
         // سیستەمی ناسینەوەی ڕووخسار
         let faceDetectionModel = null;
         let isFaceDetectionReady = false;
@@ -695,7 +799,167 @@
             setupEventListeners();
             setupCameraEvents();
             loadFaceDetectionModel();
+            
+            // Setup API URL
+            document.getElementById('instituteApiUrl').value = INSTITUTE_API_URL;
         });
+        
+        // فەنکشنە نوێیەکان بۆ ناردنی باکەپ بۆ سیستەمی پەیمانگا
+        async function sendBackupToInstitute() {
+            try {
+                // Update UI
+                const statusMessage = document.getElementById('apiStatusMessage');
+                const progressBar = document.getElementById('sendProgressBar');
+                const progressContainer = document.getElementById('sendProgress');
+                const sendBtn = document.getElementById('sendBackupBtn');
+                
+                statusMessage.innerHTML = '<span class="api-status api-sending"><i class="fas fa-spinner fa-spin me-2"></i>پێکھێنانی باکەپ...</span>';
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '25%';
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ناردن...';
+                
+                // پێکھێنانی بەکەپی سیستەمی مامۆستا
+                const backupData = {
+                    students: students,
+                    attendance: attendance,
+                    backupDate: new Date().toISOString(),
+                    sourceSystem: "سیستەمی مامۆستا",
+                    version: "1.0"
+                };
+
+                progressBar.style.width = '50%';
+                statusMessage.innerHTML = '<span class="api-status api-sending"><i class="fas fa-spinner fa-spin me-2"></i>ناردنی باکەپ...</span>';
+                
+                // ناردن بە ڕێگای API
+                const response = await fetch(INSTITUTE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(backupData)
+                });
+
+                progressBar.style.width = '75%';
+                
+                const result = await response.json();
+                
+                progressBar.style.width = '100%';
+                
+                if (response.ok && result.success) {
+                    statusMessage.innerHTML = `<span class="api-status api-success">
+                        <i class="fas fa-check-circle me-2"></i>بەکەپ بە سەرکەوتوویی نێردرا!
+                    </span>`;
+                    
+                    // Show success message
+                    setTimeout(() => {
+                        alert(`✅ بەکەپ بە سەرکەوتوویی نێردرا بۆ سیستەمی پەیمانگا!\n\nزانیاریەکان:\n• ${result.importedStudents} قوتابی نوێ زیادکرا\n• ${result.importedAttendance} غیابی نوێ زیادکرا\n• ${result.updatedAttendance} غیاب نوێکرایەوە\n• کۆی قوتابیان: ${result.totalStudents}\n• کۆی غیابەکان: ${result.totalAttendance}`);
+                    }, 500);
+                    
+                    apiConnectionStatus = "connected";
+                    updateConnectionStatus();
+                } else {
+                    statusMessage.innerHTML = `<span class="api-status api-error">
+                        <i class="fas fa-times-circle me-2"></i>هەڵە لە ناردنی باکەپ: ${result.message || 'هەڵەی نەزانراو'}
+                    </span>`;
+                    
+                    apiConnectionStatus = "error";
+                    updateConnectionStatus();
+                }
+            } catch (error) {
+                console.error('هەڵە لە ناردنی باکەپ:', error);
+                
+                const statusMessage = document.getElementById('apiStatusMessage');
+                statusMessage.innerHTML = `<span class="api-status api-error">
+                    <i class="fas fa-times-circle me-2"></i>هەڵە لە ناردنی باکەپ: ${error.message}
+                </span>`;
+                
+                apiConnectionStatus = "error";
+                updateConnectionStatus();
+            } finally {
+                // Reset UI
+                setTimeout(() => {
+                    const progressBar = document.getElementById('sendProgressBar');
+                    const progressContainer = document.getElementById('sendProgress');
+                    const sendBtn = document.getElementById('sendBackupBtn');
+                    
+                    progressBar.style.width = '0%';
+                    progressContainer.style.display = 'none';
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>ناردنی بەکەپ';
+                }, 2000);
+            }
+        }
+        
+        // تاقیکردنەوەی پەیوەندی بۆ سیستەمی پەیمانگا
+        async function testInstituteConnection() {
+            try {
+                const connectionStatus = document.getElementById('connectionStatus');
+                connectionStatus.className = 'api-status api-sending';
+                connectionStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>پشکنینی پەیوەندی...';
+                
+                const testResponse = await fetch(INSTITUTE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        test: true,
+                        sourceSystem: "تاقیکردنەوە",
+                        backupDate: new Date().toISOString()
+                    })
+                });
+                
+                if (testResponse.ok) {
+                    connectionStatus.className = 'api-status api-success';
+                    connectionStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i>پەیوەندی سەرکەوتووە!';
+                    apiConnectionStatus = "connected";
+                    
+                    setTimeout(() => {
+                        alert('✅ پەیوەندی بە سیستەمی پەیمانگا سەرکەوتوو بوو!\n\nسیستەم ئامادەیە بۆ ناردنی باکەپەکان.');
+                    }, 500);
+                } else {
+                    connectionStatus.className = 'api-status api-error';
+                    connectionStatus.innerHTML = '<i class="fas fa-times-circle me-1"></i>پەیوەندی شکستی هێنا';
+                    apiConnectionStatus = "error";
+                }
+            } catch (error) {
+                const connectionStatus = document.getElementById('connectionStatus');
+                connectionStatus.className = 'api-status api-error';
+                connectionStatus.innerHTML = `<i class="fas fa-times-circle me-1"></i>پەیوەندی شکستی هێنا: ${error.message}`;
+                apiConnectionStatus = "error";
+            }
+        }
+        
+        // نوێکردنەوەی دۆخی پەیوەندی
+        function updateConnectionStatus() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            if (!connectionStatus) return;
+            
+            switch(apiConnectionStatus) {
+                case "connected":
+                    connectionStatus.className = 'api-status api-success';
+                    connectionStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i>پەیوەندی سەرکەوتووە';
+                    break;
+                case "error":
+                    connectionStatus.className = 'api-status api-error';
+                    connectionStatus.innerHTML = '<i class="fas fa-times-circle me-1"></i>پەیوەندی شکستی هێنا';
+                    break;
+                default:
+                    connectionStatus.className = 'api-status api-sending';
+                    connectionStatus.innerHTML = '<i class="fas fa-circle me-1"></i>پەیوەندی تاقینەکراوە';
+            }
+        }
+        
+        // کۆپیکردنی ناونیشانی API
+        function copyApiUrl() {
+            const apiUrlInput = document.getElementById('instituteApiUrl');
+            apiUrlInput.select();
+            document.execCommand('copy');
+            alert('ناونیشانی API کۆپی کرا!');
+        }
         
         // بارکردنی مۆدێلی ناسینەوەی ڕووخسار
         async function loadFaceDetectionModel() {
@@ -903,6 +1167,10 @@
             
             // هەناردنی ڕاپۆرت
             document.getElementById('exportAttendanceBtn').addEventListener('click', exportAttendanceReport);
+            
+            // ناردنی باکەپ بۆ سیستەمی پەیمانگا
+            document.getElementById('sendBackupBtn').addEventListener('click', sendBackupToInstitute);
+            document.getElementById('sendBackupSettingsBtn').addEventListener('click', sendBackupToInstitute);
         }
         
         // ڕێکخستنی کامێرا
