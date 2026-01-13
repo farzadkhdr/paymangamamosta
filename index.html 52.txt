@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستەمی غیابات - پەیمانگای سۆران</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --success: #1cc88a;
+            --info: #36b9cc;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --secondary: #858796;
+            --light: #f8f9fc;
+            --dark: #5a5c69;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fc;
+            color: #333;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            font-weight: 500;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: 700;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5ccc;
+            border-color: #3a5ccc;
+        }
+        
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            display: none;
+            position: absolute;
+            width: 100%;
+            z-index: 1000;
+            background: white;
+        }
+        
+        .search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .attendance-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .student-card {
+            transition: all 0.3s;
+        }
+        
+        .student-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .present {
+            border-left: 4px solid var(--success);
+        }
+        
+        .absent {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .auto-marked {
+            border-right: 4px solid var(--warning);
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .camera-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .camera-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        #cameraVideo {
+            width: 100%;
+            max-height: 400px;
+            border-radius: 5px;
+        }
+        
+        #cameraCanvas {
+            display: none;
+        }
+        
+        .capture-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .face-match-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .match-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .match-failure {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .student-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #4e73df;
+            margin: 0 auto 10px;
+            display: block;
+        }
+        
+        .camera-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e3e6f0;
+        }
+        
+        .photo-preview-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .attendance-with-photo {
+            border: 2px solid var(--success);
+            position: relative;
+        }
+        
+        .attendance-with-photo::after {
+            content: "📷";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- پەڕەی چوونەژوورەوە -->
+    <div id="loginPage" class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">چوونەژوورەوە بۆ سیستەمی غیابات</h2>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">ناوی بەکارهێنەر</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">پاسوۆرد</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">چوونەژوورەوە</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- پەڕەی سەرەکی -->
+    <div id="mainPage" style="display: none;">
+        <!-- ناوەڕۆکی سەرەوە -->
+        <nav class="navbar navbar-expand navbar-light">
+            <div class="container-fluid">
+                <button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggle">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-user-tie me-2"></i>
+                    سیستەمی غیابات - پەیمانگای سۆران
+                </a>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle fa-fw"></i>
+                            <span id="userName">مامۆستا</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="showSection('settingsSection')"><i class="fas fa-cogs fa-sm fa-fw me-2 text-gray-400"></i> ڕێکخستن</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i> دەرچوون</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- لیستەی تەنیشت -->
+                <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
+                    <div class="position-sticky pt-3">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" onclick="showSection('attendanceSection')">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    غیابات
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('studentsSection')">
+                                    <i class="fas fa-users me-2"></i>
+                                    قوتابیان
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('settingsSection')">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    ڕێکخستن
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- کامێرای غیابات -->
+                <div class="camera-container" id="cameraContainer">
+                    <div class="camera-content">
+                        <h3 class="text-center mb-3">وێنەگرتنی غیابات</h3>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <video id="cameraVideo" autoplay playsinline></video>
+                                <canvas id="cameraCanvas"></canvas>
+                            </div>
+                            <div class="col-md-4">
+                                <div id="studentInfoCard" class="card">
+                                    <div class="card-body text-center">
+                                        <img id="studentPhoto" src="" alt="وێنەی قوتابی" class="student-photo" style="display: none;">
+                                        <h5 id="studentNameCard">-</h5>
+                                        <p id="studentDetails" class="text-muted">-</p>
+                                        <div id="faceMatchResult" class="face-match-result" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="capture-buttons">
+                            <button id="captureBtn" class="btn btn-primary">
+                                <i class="fas fa-camera me-2"></i>وێنەگرتن
+                            </button>
+                            <button id="retryCaptureBtn" class="btn btn-warning" style="display: none;">
+                                <i class="fas fa-redo me-2"></i>هەوڵی دووبارە
+                            </button>
+                            <button id="confirmAttendanceBtn" class="btn btn-success" style="display: none;">
+                                <i class="fas fa-check me-2"></i>پشتڕاستکردنەوەی غیابات
+                            </button>
+                            <button id="closeCameraBtn" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>داخستن
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ناوەڕۆکی سەرەکی -->
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <!-- بەشی غیابات -->
+                    <div id="attendanceSection" class="section active">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">سیستەمی غیابات</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="todayBtn">ئەمڕۆ</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="datePickerBtn">بەرواری دیاریکراو</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        هەڵبژاردنی بەروار
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="attendanceDate" class="form-label">بەرواری غیابات</label>
+                                            <input type="date" class="form-control" id="attendanceDate" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="attendanceCourse" class="form-label">ناوی وانە</label>
+                                            <input type="text" class="form-control" id="attendanceCourse" placeholder="ناوی وانە بنووسە..." required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="attendanceLevel" class="form-label">قۆناغ</label>
+                                            <select class="form-select" id="attendanceLevel">
+                                                <option value="">هەموو قۆناغەکان</option>
+                                                <option value="1">قۆناغی 1</option>
+                                                <option value="2">قۆناغی 2</option>
+                                                <option value="3">قۆناغی 3</option>
+                                                <option value="4">قۆناغی 4</option>
+                                                <option value="5">قۆناغی 5</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="attendanceGroup" class="form-label">گروپ</label>
+                                            <select class="form-select" id="attendanceGroup">
+                                                <option value="">هەموو گروپەکان</option>
+                                                <option value="A">گروپ A</option>
+                                                <option value="B">گروپ B</option>
+                                                <option value="C">گروپ C</option>
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-primary" id="loadStudentsBtn">بارکردنی قوتابیان</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        زانیاری ئەمڕۆ
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <h4 id="presentCount">0</h4>
+                                                <p class="text-success">حەضر</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <h4 id="absentCount">0</h4>
+                                                <p class="text-danger">غیاب</p>
+                                            </div>
+                                        </div>
+                                        <div class="d-grid gap-2 mt-3">
+                                            <button class="btn btn-success" id="saveAttendanceBtn">پاشەکەوتکردنی غیابات</button>
+                                            <button class="btn btn-info" id="exportAttendanceBtn">هەناردنی ڕاپۆرت</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- زیادکراوی کامێرا -->
+                        <div class="camera-section">
+                            <h4><i class="fas fa-camera me-2"></i>وێنەگرتنی غیابات</h4>
+                            <p class="text-muted">کامێراکە بەکاربهێنە بۆ وەرگرتنی غیابات بە شێوازی ئۆتۆماتیکی</p>
+                            <button id="startCameraBtn" class="btn btn-info">
+                                <i class="fas fa-camera me-2"></i>کردنەوەی کامێرا بۆ غیابات
+                            </button>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>لیستی قوتابیان</span>
+                                <div>
+                                    <button class="btn btn-sm btn-success me-1" id="markAllPresentBtn">نیشانەکردنی هەموو حەضر</button>
+                                    <button class="btn btn-sm btn-danger me-1" id="markAllAbsentBtn">نیشانەکردنی هەموو غیاب</button>
+                                    <button class="btn btn-sm btn-warning" id="resetAutoMarkedBtn">ڕیسێتکردنی غیابە خۆکارانەکان</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row" id="studentsAttendanceList">
+                                    <!-- لیستی قوتابیان لێرە زیاد دەکرێت -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- بەشی قوتابیان -->
+                    <div id="studentsSection" class="section">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">بەشی قوتابیان</h1>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                گەڕان بەدوای قوتابی
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6 position-relative">
+                                        <label for="studentSearch" class="form-label">ناوی قوتابی</label>
+                                        <input type="text" class="form-control" id="studentSearch" placeholder="ناوی قوتابی بنووسە...">
+                                        <div id="studentSearchResults" class="search-results"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                زیادکردنی قوتابی
+                            </div>
+                            <div class="card-body">
+                                <form id="addStudentForm">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="studentName" class="form-label">ناوی قوتابی</label>
+                                            <input type="text" class="form-control" id="studentName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="fatherName" class="form-label">ناوی باوکی</label>
+                                            <input type="text" class="form-control" id="fatherName" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="grandfatherName" class="form-label">ناوی باپیری</label>
+                                            <input type="text" class="form-control" id="grandfatherName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="studentPhone" class="form-label">ژمارەی مۆبایلی قوتابی</label>
+                                            <input type="tel" class="form-control" id="studentPhone">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="studentGroup" class="form-label">جۆری گروپ</label>
+                                            <select class="form-select" id="studentGroup" required>
+                                                <option value="">هەڵبژێرە</option>
+                                                <option value="A">گروپ A</option>
+                                                <option value="B">گروپ B</option>
+                                                <option value="C">گروپ C</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="studentLevel" class="form-label">قۆناغ</label>
+                                            <select class="form-select" id="studentLevel" required>
+                                                <option value="">هەڵبژێرە</option>
+                                                <option value="1">قۆناغی 1</option>
+                                                <option value="2">قۆناغی 2</option>
+                                                <option value="3">قۆناغی 3</option>
+                                                <option value="4">قۆناغی 4</option>
+                                                <option value="5">قۆناغی 5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- زیادکراوی وێنەی قوتابی -->
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label class="form-label">وێنەی قوتابی</label>
+                                            <div class="photo-preview-container">
+                                                <img id="studentPhotoPreview" src="" alt="پێشبینینی وێنە" class="student-photo" style="display: none;">
+                                                <p id="noPhotoText" class="text-muted">هێشتا وێنەیەک بار نەکراوە</p>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <input type="file" class="form-control" id="studentPhotoUpload" accept="image/*">
+                                                <button type="button" id="capturePhotoBtn" class="btn btn-outline-primary">
+                                                    <i class="fas fa-camera me-2"></i>وێنەگرتن
+                                                </button>
+                                            </div>
+                                            <div class="form-text">وێنەیەکی بۆ ناسینەوەی قوتابی باربکە یان لە کامێرا وێنەیەک بگرە</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary mt-3">زیادکردنی قوتابی</button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- لیستی قوتابیان -->
+                        <div class="card">
+                            <div class="card-header">
+                                لیستی هەموو قوتابیان
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>ناو</th>
+                                                <th>ناوی باوک</th>
+                                                <th>ناوی باپیر</th>
+                                                <th>قۆناغ</th>
+                                                <th>گروپ</th>
+                                                <th>ژمارەی مۆبایل</th>
+                                                <th>وێنە</th>
+                                                <th>کردارەکان</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="studentsList">
+                                            <!-- لیستی قوتابیان لێرە زیاد دەکرێت -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- بەشی ڕێکخستن -->
+                    <div id="settingsSection" class="section">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">ڕێکخستن</h1>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        گۆڕینی پاسوۆرد
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="changePasswordForm">
+                                            <div class="mb-3">
+                                                <label for="currentPassword" class="form-label">پاسوۆردی ئێستا</label>
+                                                <input type="password" class="form-control" id="currentPassword" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="newPassword" class="form-label">پاسوۆردی نوێ</label>
+                                                <input type="password" class="form-control" id="newPassword" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="confirmPassword" class="form-label">دووبارەکردنەوەی پاسوۆردی نوێ</label>
+                                                <input type="password" class="form-control" id="confirmPassword" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">گۆڕینی پاسوۆرد</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        بەکەپ کردن
+                                    </div>
+                                    <div class="card-body">
+                                        <p>بەکەپ کردن لە هەموو زانیاریەکانی سیستەم</p>
+                                        <button class="btn btn-primary" id="backupBtn">بەکەپ کردن</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        خوێندنەوەی بەکەپ
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="backupFile" class="form-label">فایلی بەکەپ</label>
+                                            <input type="file" class="form-control" id="backupFile" accept=".json">
+                                        </div>
+                                        <button class="btn btn-primary" id="restoreBtn">خوێندنەوەی بەکەپ</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        بارکردنی زانیاری لە سیستەمەکانی تر
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="importFile" class="form-label">فایلی سیستەمی تر</label>
+                                            <input type="file" class="form-control" id="importFile" accept=".json">
+                                        </div>
+                                        <button class="btn btn-primary" id="importBtn">بارکردنی زانیاری</button>
+                                        <p class="text-muted mt-2">ئەم ئامرازە ڕێگەت پێدەدا زانیاریەکانی قوتابیان و غیابات لە سیستەمەکانی تر باربکەیت.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // زانیاریەکانی سیستەم
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let editingStudentId = null;
+        let currentStream = null;
+        let currentStudentForCamera = null;
+        
+        // سیستەمی ناسینەوەی ڕووخسار
+        let faceDetectionModel = null;
+        let isFaceDetectionReady = false;
+        
+        // پاسوۆردی سەرەکی
+        const systemPassword = "teacher123";
+        const systemUsername = "teacher";
+        
+        // چێککردنی چوونەژوورەوە
+        document.addEventListener('DOMContentLoaded', function() {
+            if (currentUser) {
+                showMainPage();
+                displayStudentsList();
+                setupTodayDate();
+            } else {
+                showLoginPage();
+            }
+            
+            // زیادکردنی Event Listeners
+            setupEventListeners();
+            setupCameraEvents();
+            loadFaceDetectionModel();
+        });
+        
+        // بارکردنی مۆدێلی ناسینەوەی ڕووخسار
+        async function loadFaceDetectionModel() {
+            try {
+                // لێرەدا دەتوانیت مۆدێلی face-api.js یان TensorFlow.js باربکەیت
+                // بۆ نمونەی ئێستا، سیستەمی سادەی خۆمان دروست دەکەین
+                console.log("مۆدێلی ناسینەوەی ڕووخسار بارکرا");
+                isFaceDetectionReady = true;
+            } catch (error) {
+                console.error("هەڵە لە بارکردنی مۆدێلی ناسینەوەی ڕووخسار:", error);
+                isFaceDetectionReady = false;
+            }
+        }
+        
+        // ناسینەوەی قوتابی لە وێنە
+        async function recognizeStudentFromPhoto(photoDataUrl) {
+            if (!isFaceDetectionReady) {
+                await loadFaceDetectionModel();
+            }
+
+            // پێشبینینی وێنە بۆ دۆزینەوەی ڕووخسار
+            const faceDetected = await detectFaceInPhoto(photoDataUrl);
+            
+            if (!faceDetected) {
+                return null; // ڕووخسار نەدۆزرایەوە
+            }
+
+            // بەراوردکردنی ڕووخسار لەگەڵ وێنەکانی قوتابیان
+            const matchedStudent = await compareFaceWithStudents(photoDataUrl);
+            
+            return matchedStudent;
+        }
+
+        // دۆزینەوەی ڕووخسار لە وێنە
+        async function detectFaceInPhoto(photoDataUrl) {
+            // لێرەدا دەتوانیت هەر مۆدێلێکی ناسینەوەی ڕووخسار بەکاربهێنیت
+            // بۆ نمونە، تەنها راستگۆیینەک دەگەڕێنینەوە
+            return new Promise((resolve) => {
+                // پێشبینین بۆ ئەوەی ڕووخسارێک هەیە یان نا
+                const img = new Image();
+                img.src = photoDataUrl;
+                img.onload = function() {
+                    // لە ڕیالیتی، پێویستە مۆدێلێکی ناسینەوەی ڕووخسار بەکاربهێنیت
+                    // بۆ نمونە، هەر وێنەیەک کە ڕووخساری تێدایە دەناسینەوە
+                    resolve(true);
+                };
+            });
+        }
+
+        // بەراوردکردنی ڕووخسار لەگەڵ وێنەکانی قوتابیان
+        async function compareFaceWithStudents(photoDataUrl) {
+            if (students.length === 0) return null;
+
+            // لێرەدا دەتوانیت مۆدێلێکی بەراوردی ڕووخسار بەکاربهێنیت
+            // بۆ نمونە، سیستەمی سادەی بەراورد بەکاردەهێنین
+            
+            let bestMatch = null;
+            let highestSimilarity = 0;
+
+            for (const student of students) {
+                if (student.photo) {
+                    const similarity = await calculateFaceSimilarity(photoDataUrl, student.photo);
+                    
+                    if (similarity > highestSimilarity && similarity > 0.6) { // ڕێگەچوونی کەمتر لە 60%
+                        highestSimilarity = similarity;
+                        bestMatch = student;
+                    }
+                }
+            }
+
+            return bestMatch;
+        }
+
+        // هەژمارکردنی ڕێگەچوونی ڕووخسار
+        async function calculateFaceSimilarity(photo1, photo2) {
+            // لێرەدا دەتوانیت مۆدێلێکی بەراوردی ڕووخسار بەکاربهێنیت
+            // بۆ نمونە، ڕێگەچوونی هەڕەمەکی دەگەڕێنینەوە
+            return new Promise((resolve) => {
+                // لە ڕیالیتی، پێویستە مۆدێلێکی وەک Face-api.js بەکاربهێنیت
+                const randomSimilarity = Math.random() * 0.3 + 0.7; // ڕێگەچوونی نێوان 70% بۆ 100%
+                resolve(randomSimilarity);
+            });
+        }
+        
+        // نیشاندانی پەڕەی چوونەژوورەوە
+        function showLoginPage() {
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('mainPage').style.display = 'none';
+        }
+        
+        // نیشاندانی پەڕەی سەرەکی
+        function showMainPage() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            showSection('attendanceSection');
+        }
+        
+        // چوونەژوورەوە
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === systemUsername && password === systemPassword) {
+                currentUser = { username: username };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                document.getElementById('userName').textContent = username;
+                showMainPage();
+                displayStudentsList();
+            } else {
+                alert('ناوی بەکارهێنەر یان پاسوۆرد هەڵەیە!');
+            }
+        });
+        
+        // دەرچوون
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showLoginPage();
+        }
+        
+        // نیشاندانی بەشێک
+        function showSection(sectionId) {
+            // لێکردنەوەی هەموو بەشەکان
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // چالاککردنی بەشی دیاریکراو
+            document.getElementById(sectionId).classList.add('active');
+            
+            // چالاککردنی لیستەی تەنیشت
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // دیاریکردنی لیستەی چالاک
+            let activeLink = null;
+            switch(sectionId) {
+                case 'attendanceSection':
+                    activeLink = document.querySelector('a[href="#"][onclick="showSection(\'attendanceSection\')"]');
+                    break;
+                case 'studentsSection':
+                    activeLink = document.querySelector('a[href="#"][onclick="showSection(\'studentsSection\')"]');
+                    displayStudentsList();
+                    break;
+                case 'settingsSection':
+                    activeLink = document.querySelector('a[href="#"][onclick="showSection(\'settingsSection\')"]');
+                    break;
+            }
+            
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+        
+        // زیادکردنی Event Listeners
+        function setupEventListeners() {
+            // زیادکردنی قوتابی
+            document.getElementById('addStudentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (editingStudentId) {
+                    updateStudent(editingStudentId);
+                } else {
+                    addStudent();
+                }
+            });
+            
+            // گۆڕینی پاسوۆرد
+            document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                changePassword();
+            });
+            
+            // بەکەپ کردن
+            document.getElementById('backupBtn').addEventListener('click', backupData);
+            
+            // خوێندنەوەی بەکەپ
+            document.getElementById('restoreBtn').addEventListener('click', restoreData);
+            
+            // بارکردنی زانیاری لە سیستەمەکانی تر
+            document.getElementById('importBtn').addEventListener('click', importData);
+            
+            // گەڕان بەدوای قوتابی
+            setupStudentSearch();
+            
+            // بەرواری ئەمڕۆ
+            document.getElementById('todayBtn').addEventListener('click', setupTodayDate);
+            
+            // بارکردنی قوتابیان بۆ غیابات
+            document.getElementById('loadStudentsBtn').addEventListener('click', loadStudentsForAttendance);
+            
+            // پاشەکەوتکردنی غیابات
+            document.getElementById('saveAttendanceBtn').addEventListener('click', saveAttendance);
+            
+            // نیشانەکردنی هەموو حەضر
+            document.getElementById('markAllPresentBtn').addEventListener('click', markAllPresent);
+            
+            // نیشانەکردنی هەموو غیاب
+            document.getElementById('markAllAbsentBtn').addEventListener('click', markAllAbsent);
+            
+            // ڕیسێتکردنی غیابە خۆکارانەکان
+            document.getElementById('resetAutoMarkedBtn').addEventListener('click', resetAutoMarkedAttendance);
+            
+            // هەناردنی ڕاپۆرت
+            document.getElementById('exportAttendanceBtn').addEventListener('click', exportAttendanceReport);
+        }
+        
+        // ڕێکخستنی کامێرا
+        function setupCameraEvents() {
+            // کردنەوەی کامێرا بۆ غیابات
+            document.getElementById('startCameraBtn').addEventListener('click', startCameraForAttendance);
+            
+            // کردنەوەی کامێرا بۆ وێنەی قوتابی
+            document.getElementById('capturePhotoBtn').addEventListener('click', startCameraForStudentPhoto);
+            
+            // وێنەگرتن
+            document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+            
+            // هەوڵی دووبارە
+            document.getElementById('retryCaptureBtn').addEventListener('click', retryCapture);
+            
+            // پشتڕاستکردنەوەی غیابات
+            document.getElementById('confirmAttendanceBtn').addEventListener('click', confirmAttendance);
+            
+            // داخستنی کامێرا
+            document.getElementById('closeCameraBtn').addEventListener('click', closeCamera);
+            
+            // بارکردنی وێنەی قوتابی
+            document.getElementById('studentPhotoUpload').addEventListener('change', handleStudentPhotoUpload);
+        }
+        
+        // کردنەوەی کامێرا بۆ غیابات
+        async function startCameraForAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            
+            if (!date || !course) {
+                alert('تکایە بەروار و ناوی وانە پڕبکەرەوە!');
+                return;
+            }
+            
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = currentStream;
+                
+                document.getElementById('cameraContainer').style.display = 'flex';
+                document.getElementById('studentInfoCard').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'block';
+                document.getElementById('retryCaptureBtn').style.display = 'none';
+                document.getElementById('confirmAttendanceBtn').style.display = 'none';
+                
+                currentStudentForCamera = null;
+                
+            } catch (error) {
+                alert('هەڵە لە کردنەوەی کامێرا: ' + error.message);
+            }
+        }
+        
+        // کردنەوەی کامێرا بۆ وێنەی قوتابی
+        async function startCameraForStudentPhoto() {
+            if (!editingStudentId) {
+                alert('تکایە یەکەم قوتابیەک هەڵبژێرە بۆ گۆڕانکاری!');
+                return;
+            }
+            
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = currentStream;
+                
+                document.getElementById('cameraContainer').style.display = 'flex';
+                document.getElementById('studentInfoCard').style.display = 'block';
+                document.getElementById('captureBtn').style.display = 'block';
+                document.getElementById('retryCaptureBtn').style.display = 'none';
+                document.getElementById('confirmAttendanceBtn').style.display = 'none';
+                
+                const student = students.find(s => s.id === editingStudentId);
+                if (student) {
+                    document.getElementById('studentNameCard').textContent = student.name;
+                    document.getElementById('studentDetails').textContent = 
+                        `قۆناغ: ${student.level} | گروپ: ${student.group}`;
+                    
+                    if (student.photo) {
+                        document.getElementById('studentPhoto').src = student.photo;
+                        document.getElementById('studentPhoto').style.display = 'block';
+                    } else {
+                        document.getElementById('studentPhoto').style.display = 'none';
+                    }
+                }
+                
+            } catch (error) {
+                alert('هەڵە لە کردنەوەی کامێرا: ' + error.message);
+            }
+        }
+        
+        // وێنەگرتن
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const photoDataUrl = canvas.toDataURL('image/png');
+            
+            if (currentStudentForCamera === null) {
+                // لە بەشی غیاباتدا وێنە دەگیرێت
+                processAttendancePhoto(photoDataUrl);
+            } else {
+                // لە بەشی قوتابیاندا وێنە دەگیرێت
+                saveStudentPhoto(photoDataUrl);
+            }
+            
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('retryCaptureBtn').style.display = 'block';
+            
+            if (currentStudentForCamera === null) {
+                document.getElementById('confirmAttendanceBtn').style.display = 'block';
+            }
+        }
+        
+        // پرۆسێسی وێنەی غیابات
+        async function processAttendancePhoto(photoDataUrl) {
+            document.getElementById('studentInfoCard').style.display = 'block';
+            document.getElementById('faceMatchResult').style.display = 'block';
+
+            // نیشاندانی بارەکە کە ناسینەوە ئەنجام دەدرێت
+            document.getElementById('faceMatchResult').className = 'face-match-result';
+            document.getElementById('faceMatchResult').innerHTML = 
+                '<i class="fas fa-spinner fa-spin me-2"></i>ناسینەوەی قوتابی...';
+
+            try {
+                const matchedStudent = await recognizeStudentFromPhoto(photoDataUrl);
+
+                if (matchedStudent) {
+                    currentStudentForCamera = matchedStudent;
+
+                    document.getElementById('studentNameCard').textContent = matchedStudent.name;
+                    document.getElementById('studentDetails').textContent = 
+                        `قۆناغ: ${matchedStudent.level} | گروپ: ${matchedStudent.group}`;
+
+                    if (matchedStudent.photo) {
+                        document.getElementById('studentPhoto').src = matchedStudent.photo;
+                        document.getElementById('studentPhoto').style.display = 'block';
+                    } else {
+                        document.getElementById('studentPhoto').style.display = 'none';
+                    }
+
+                    document.getElementById('faceMatchResult').className = 'face-match-result match-success';
+                    document.getElementById('faceMatchResult').innerHTML = 
+                        `<i class="fas fa-check-circle me-2"></i>قوتابی ناسێنرا! (${matchedStudent.name})`;
+                } else {
+                    document.getElementById('studentNameCard').textContent = 'نەناسرا';
+                    document.getElementById('studentDetails').textContent = 'قوتابی نەناسێنرا';
+                    document.getElementById('studentPhoto').style.display = 'none';
+
+                    document.getElementById('faceMatchResult').className = 'face-match-result match-failure';
+                    document.getElementById('faceMatchResult').innerHTML = 
+                        '<i class="fas fa-times-circle me-2"></i>قوتابی نەناسێنرا! تکایە هەوڵبدەرەوە';
+
+                    currentStudentForCamera = null;
+                }
+            } catch (error) {
+                console.error("هەڵە لە ناسینەوەی قوتابی:", error);
+                
+                document.getElementById('studentNameCard').textContent = 'هەڵە';
+                document.getElementById('studentDetails').textContent = 'هەڵە لە ناسینەوەی قوتابی';
+                document.getElementById('studentPhoto').style.display = 'none';
+
+                document.getElementById('faceMatchResult').className = 'face-match-result match-failure';
+                document.getElementById('faceMatchResult').innerHTML = 
+                    '<i class="fas fa-exclamation-triangle me-2"></i>هەڵە لە ناسینەوە! تکایە هەوڵبدەرەوە';
+
+                currentStudentForCamera = null;
+            }
+        }
+        
+        // هەوڵی دووبارە
+        function retryCapture() {
+            document.getElementById('captureBtn').style.display = 'block';
+            document.getElementById('retryCaptureBtn').style.display = 'none';
+            document.getElementById('confirmAttendanceBtn').style.display = 'none';
+            document.getElementById('faceMatchResult').style.display = 'none';
+        }
+        
+        // داخستنی کامێرا
+        function closeCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            document.getElementById('cameraContainer').style.display = 'none';
+        }
+        
+        // پشتڕاستکردنەوەی غیابات
+        function confirmAttendance() {
+            if (!currentStudentForCamera) {
+                alert('تکایە یەکەم قوتابیەک بناسێنە!');
+                return;
+            }
+            
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            
+            // زیادکردنی غیابات
+            const attendanceRecord = {
+                id: `${currentStudentForCamera.id}-${date}-${course}`,
+                studentId: currentStudentForCamera.id,
+                studentName: currentStudentForCamera.name,
+                date: date,
+                course: course,
+                present: true,
+                photo: document.getElementById('cameraCanvas').toDataURL('image/png'),
+                timestamp: new Date().toISOString()
+            };
+            
+            // سڕینەوەی غیابەکانی پێشوو
+            attendance = attendance.filter(a => 
+                !(a.studentId === currentStudentForCamera.id && 
+                  a.date === date && 
+                  a.course === course)
+            );
+            
+            attendance.push(attendanceRecord);
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            
+            alert(`غیابات بۆ ${currentStudentForCamera.name} پاشەکەوت کرا!`);
+            closeCamera();
+            updateAttendanceCount();
+        }
+        
+        // پاشەکەوتکردنی وێنەی قوتابی
+        function saveStudentPhoto(photoDataUrl) {
+            if (!editingStudentId) return;
+            
+            const studentIndex = students.findIndex(s => s.id === editingStudentId);
+            if (studentIndex === -1) return;
+            
+            students[studentIndex].photo = photoDataUrl;
+            localStorage.setItem('students', JSON.stringify(students));
+            
+            // نوێکردنەوەی پێشبینین
+            document.getElementById('studentPhotoPreview').src = photoDataUrl;
+            document.getElementById('studentPhotoPreview').style.display = 'block';
+            document.getElementById('noPhotoText').style.display = 'none';
+            
+            alert('وێنەی قوتابی پاشەکەوت کرا!');
+            closeCamera();
+        }
+        
+        // بارکردنی وێنەی قوتابی
+        function handleStudentPhotoUpload(event) {
+            if (!editingStudentId) {
+                alert('تکایە یەکەم قوتابیەک هەڵبژێرە بۆ گۆڕانکاری!');
+                return;
+            }
+            
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const studentIndex = students.findIndex(s => s.id === editingStudentId);
+                if (studentIndex === -1) return;
+                
+                students[studentIndex].photo = e.target.result;
+                localStorage.setItem('students', JSON.stringify(students));
+                
+                // نوێکردنەوەی پێشبینین
+                document.getElementById('studentPhotoPreview').src = e.target.result;
+                document.getElementById('studentPhotoPreview').style.display = 'block';
+                document.getElementById('noPhotoText').style.display = 'none';
+                
+                alert('وێنەی قوتابی بارکرا!');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // ڕێکخستنی بەرواری ئەمڕۆ
+        function setupTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+        }
+        
+        // فەنکشنی نوێ بۆ نیشاندانی لیستی قوتابیان
+        function displayStudentsList() {
+            const studentsList = document.getElementById('studentsList');
+            studentsList.innerHTML = '';
+
+            if (students.length === 0) {
+                studentsList.innerHTML = '<tr><td colspan="8" class="text-center">هیچ قوتابیەک تۆمار نەکراوە</td></tr>';
+                return;
+            }
+
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.fatherName}</td>
+                    <td>${student.grandfatherName}</td>
+                    <td>قۆناغی ${student.level}</td>
+                    <td>${student.group}</td>
+                    <td>${student.phone || '-'}</td>
+                    <td class="text-center">
+                        ${student.photo ? 
+                            '<i class="fas fa-camera text-success" title="وێنەی هەیە"></i>' : 
+                            '<i class="fas fa-times text-muted" title="وێنەی نییە"></i>'
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editStudent('${student.id}')">
+                            <i class="fas fa-edit"></i> گۆڕانکاری
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')">
+                            <i class="fas fa-trash"></i> سڕینەوە
+                        </button>
+                    </td>
+                `;
+                studentsList.appendChild(row);
+            });
+        }
+
+        // فەنکشنی گۆڕانکاری قوتابی
+        function editStudent(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            // پڕکردنەوەی فۆرم بە زانیاری قوتابی
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('fatherName').value = student.fatherName;
+            document.getElementById('grandfatherName').value = student.grandfatherName;
+            document.getElementById('studentPhone').value = student.phone || '';
+            document.getElementById('studentGroup').value = student.group;
+            document.getElementById('studentLevel').value = student.level;
+
+            // نوێکردنەوەی وێنە
+            if (student.photo) {
+                document.getElementById('studentPhotoPreview').src = student.photo;
+                document.getElementById('studentPhotoPreview').style.display = 'block';
+                document.getElementById('noPhotoText').style.display = 'none';
+            } else {
+                document.getElementById('studentPhotoPreview').style.display = 'none';
+                document.getElementById('noPhotoText').style.display = 'block';
+            }
+
+            // گۆڕینی دەقەی دووگمەی زیادکردن
+            const submitBtn = document.querySelector('#addStudentForm button[type="submit"]');
+            submitBtn.textContent = 'نوێکردنەوەی قوتابی';
+            editingStudentId = studentId;
+        }
+
+        // فەنکشنی نوێکردنەوەی قوتابی
+        function updateStudent(studentId) {
+            const studentIndex = students.findIndex(s => s.id === studentId);
+            if (studentIndex === -1) return;
+
+            students[studentIndex] = {
+                ...students[studentIndex],
+                name: document.getElementById('studentName').value,
+                fatherName: document.getElementById('fatherName').value,
+                grandfatherName: document.getElementById('grandfatherName').value,
+                phone: document.getElementById('studentPhone').value,
+                group: document.getElementById('studentGroup').value,
+                level: document.getElementById('studentLevel').value
+            };
+
+            saveStudentsAndRefresh();
+        }
+
+        // فەنکشنی سڕینەوەی قوتابی
+        function deleteStudent(studentId) {
+            if (!confirm('دڵنیایت دەتەوێت ئەم قوتابیە بسڕیتەوە؟')) {
+                return;
+            }
+
+            // سڕینەوەی قوتابی
+            students = students.filter(s => s.id !== studentId);
+            
+            // سڕینەوەی هەموو غیابەکانی قوتابی
+            attendance = attendance.filter(a => a.studentId !== studentId);
+
+            saveStudentsAndRefresh();
+            alert('قوتابی بە سەرکەوتوویی سڕدرایەوە!');
+        }
+
+        // فەنکشنی پاشەکەوتکردن و نوێکردنەوە
+        function saveStudentsAndRefresh() {
+            localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            
+            displayStudentsList();
+            
+            // ڕیسێتکردنی فۆرم
+            document.getElementById('addStudentForm').reset();
+            const submitBtn = document.querySelector('#addStudentForm button[type="submit"]');
+            submitBtn.textContent = 'زیادکردنی قوتابی';
+            editingStudentId = null;
+            
+            // ڕیسێتکردنی وێنە
+            document.getElementById('studentPhotoPreview').style.display = 'none';
+            document.getElementById('noPhotoText').style.display = 'block';
+        }
+        
+        // زیادکردنی قوتابی
+        function addStudent() {
+            const student = {
+                id: Date.now().toString(),
+                name: document.getElementById('studentName').value,
+                fatherName: document.getElementById('fatherName').value,
+                grandfatherName: document.getElementById('grandfatherName').value,
+                phone: document.getElementById('studentPhone').value,
+                group: document.getElementById('studentGroup').value,
+                level: document.getElementById('studentLevel').value,
+                photo: document.getElementById('studentPhotoPreview').src || null
+            };
+            
+            students.push(student);
+            localStorage.setItem('students', JSON.stringify(students));
+            alert('قوتابی بە سەرکەوتوویی زیاد کرا!');
+            document.getElementById('addStudentForm').reset();
+            
+            // ڕیسێتکردنی وێنە
+            document.getElementById('studentPhotoPreview').style.display = 'none';
+            document.getElementById('noPhotoText').style.display = 'block';
+            
+            displayStudentsList();
+        }
+        
+        // گۆڕینی پاسوۆرد
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (currentPassword !== systemPassword) {
+                alert('پاسوۆردی ئێستا هەڵەیە!');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('پاسوۆردی نوێ و دووبارەکردنەوەی جیاوازن!');
+                return;
+            }
+            
+            alert('پاسوۆرد بە سەرکەوتوویی گۆڕدرا!');
+            document.getElementById('changePasswordForm').reset();
+        }
+        
+        // بەکەپ کردن
+        function backupData() {
+            const data = {
+                students: students,
+                attendance: attendance,
+                backupDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `attendance_system_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            alert('بەکەپ بە سەرکەوتوویی دروست کرا!');
+        }
+        
+        // خوێندنەوەی بەکەپ
+        function restoreData() {
+            const fileInput = document.getElementById('backupFile');
+            if (fileInput.files.length === 0) {
+                alert('تکایە فایلی بەکەپ هەڵبژێرە!');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // زیادکردنی زانیاریە نوێیەکان بە شێوەیەکی جیاواز
+                    if (data.students) {
+                        // تەنها قوتابیە نوێیەکان زیاد دەکەین
+                        data.students.forEach(newStudent => {
+                            if (!students.find(s => s.id === newStudent.id)) {
+                                students.push(newStudent);
+                            }
+                        });
+                    }
+                    
+                    if (data.attendance) {
+                        // تەنها غیابە نوێیەکان زیاد دەکەین
+                        data.attendance.forEach(newAttendance => {
+                            if (!attendance.find(a => a.id === newAttendance.id)) {
+                                attendance.push(newAttendance);
+                            }
+                        });
+                    }
+                    
+                    localStorage.setItem('students', JSON.stringify(students));
+                    localStorage.setItem('attendance', JSON.stringify(attendance));
+                    
+                    alert('بەکەپ بە سەرکەوتوویی خوێندرایەوە!');
+                    displayStudentsList();
+                } catch (error) {
+                    alert('هەڵە لە خوێندنەوەی فایلی بەکەپ: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // بارکردنی زانیاری لە سیستەمەکانی تر
+        function importData() {
+            const fileInput = document.getElementById('importFile');
+            if (fileInput.files.length === 0) {
+                alert('تکایە فایلی سیستەمی تر هەڵبژێرە!');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    let importedCount = 0;
+                    
+                    // زیادکردنی قوتابیان
+                    if (data.students) {
+                        data.students.forEach(newStudent => {
+                            if (!students.find(s => s.id === newStudent.id)) {
+                                students.push(newStudent);
+                                importedCount++;
+                            }
+                        });
+                    }
+                    
+                    // زیادکردنی غیابات
+                    if (data.attendance) {
+                        data.attendance.forEach(newAttendance => {
+                            if (!attendance.find(a => a.id === newAttendance.id)) {
+                                attendance.push(newAttendance);
+                            }
+                        });
+                    }
+                    
+                    localStorage.setItem('students', JSON.stringify(students));
+                    localStorage.setItem('attendance', JSON.stringify(attendance));
+                    
+                    alert(`${importedCount} قوتابی بە سەرکەوتوویی بارکران!`);
+                    displayStudentsList();
+                } catch (error) {
+                    alert('هەڵە لە خوێندنەوەی فایل: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // ڕێکخستنی گەڕان بەدوای قوتابی
+        function setupStudentSearch() {
+            // گەڕان لە بەشی قوتابیان
+            document.getElementById('studentSearch').addEventListener('input', function() {
+                searchStudents(this.value, 'studentSearchResults', function(student) {
+                    // هیچ کردارێک لێنینەدەکرێت، تەنها پێشنیار
+                });
+            });
+        }
+        
+        // گەڕان بەدوای قوتابی
+        function searchStudents(query, resultsContainerId, onSelect) {
+            const resultsContainer = document.getElementById(resultsContainerId);
+            
+            if (query.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+            
+            const filteredStudents = students.filter(student => 
+                student.name.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (filteredStudents.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-item">هیچ قوتابیەک نەدۆزرایەوە</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '';
+            filteredStudents.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                item.textContent = student.name;
+                item.addEventListener('click', function() {
+                    onSelect(student);
+                });
+                resultsContainer.appendChild(item);
+            });
+            
+            resultsContainer.style.display = 'block';
+        }
+        
+        // زیادکردنی فەنکشنی نوێ بۆ خۆکارانە نیشانەکردنی قوتابیە نەناسراوەکان وەک غیاب
+        async function processUnrecognizedStudents() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            
+            if (!date || !course) return;
+
+            // وەرگرتنی هەموو قوتابیەکانی ئەم بەروارە و وانەیە
+            const todayStudents = students.filter(student => {
+                const existingAttendance = attendance.find(a => 
+                    a.studentId === student.id && 
+                    a.date === date && 
+                    a.course === course
+                );
+                return !existingAttendance; // تەنها ئەوانەی کە هێشتا غیاباتیان تۆمار نەکراوە
+            });
+
+            // نیشانەکردنی هەموو قوتابیە نەناسراوەکان وەک غیاب
+            todayStudents.forEach(student => {
+                const attendanceRecord = {
+                    id: `${student.id}-${date}-${course}`,
+                    studentId: student.id,
+                    studentName: student.name,
+                    date: date,
+                    course: course,
+                    present: false, // غیاب
+                    timestamp: new Date().toISOString(),
+                    autoMarked: true // نیشانەیەک بۆ ئەوەی کە خۆکارانە نیشانەکراوە
+                };
+
+                // پشکنین بۆ ئەوەی ڕیکۆردێکی پێشوو هەیە یان نا
+                const existingIndex = attendance.findIndex(a => a.id === attendanceRecord.id);
+                if (existingIndex === -1) {
+                    attendance.push(attendanceRecord);
+                }
+            });
+
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+        }
+
+        // فەنکشنی نوێ بۆ ڕیسێتکردنی هەموو غیابە خۆکارانەکان
+        function resetAutoMarkedAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            
+            if (!date || !course) return;
+
+            // سڕینەوەی هەموو غیابە خۆکارانەکان
+            attendance = attendance.filter(a => !(a.date === date && a.course === course && a.autoMarked));
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            
+            alert("هەموو غیابە خۆکارانەکان سڕدرانەوە!");
+            loadStudentsForAttendance();
+        }
+        
+        // بارکردنی قوتابیان بۆ غیابات
+        function loadStudentsForAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            if (!date || !course) {
+                alert('تکایە بەروار و ناوی وانە پڕبکەرەوە!');
+                return;
+            }
+
+            // پڕۆسێسی قوتابیە نەناسراوەکان پێش بارکردنی لیستەکە
+            processUnrecognizedStudents();
+
+            const studentsList = document.getElementById('studentsAttendanceList');
+            studentsList.innerHTML = '';
+
+            // فیلتەرکردنی قوتابیان بە پێی قۆناغ و گروپ
+            let filteredStudents = students;
+
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+
+            if (filteredStudents.length === 0) {
+                studentsList.innerHTML = '<div class="col-12 text-center"><p>هیچ قوتابیەک بەم هەڵبژاردنە نەدۆزرایەوە</p></div>';
+                updateAttendanceCount();
+                return;
+            }
+
+            filteredStudents.forEach(student => {
+                // پشکنین بۆ دۆزینەوەی غیابەکانی پێشوو بۆ ئەم بەروارە و وانەیە
+                const existingAttendance = attendance.find(a => 
+                    a.studentId === student.id && 
+                    a.date === date && 
+                    a.course === course
+                );
+
+                const isPresent = existingAttendance ? existingAttendance.present : false; // بنچینە غیابە
+                const hasPhoto = existingAttendance ? !!existingAttendance.photo : false;
+                const isAutoMarked = existingAttendance ? !!existingAttendance.autoMarked : false;
+
+                const studentCard = document.createElement('div');
+                studentCard.className = `col-md-6 col-lg-4 mb-3 student-card ${isPresent ? 'present' : 'absent'} ${hasPhoto ? 'attendance-with-photo' : ''} ${isAutoMarked ? 'auto-marked' : ''}`;
+                
+                studentCard.innerHTML = `
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${student.name}</h5>
+                            <p class="card-text">
+                                <small class="text-muted">باوک: ${student.fatherName}</small><br>
+                                <small class="text-muted">قۆناغ: ${student.level} | گروپ: ${student.group}</small>
+                                ${hasPhoto ? '<br><small class="text-success"><i class="fas fa-camera"></i> وێنەگیراو</small>' : ''}
+                                ${isAutoMarked ? '<br><small class="text-warning"><i class="fas fa-robot"></i> خۆکارانە نیشانەکراوە</small>' : ''}
+                            </p>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="attendance-${student.id}" id="present-${student.id}" autocomplete="off" ${isPresent ? 'checked' : ''}>
+                                <label class="btn btn-outline-success" for="present-${student.id}">حەضر</label>
+                                
+                                <input type="radio" class="btn-check" name="attendance-${student.id}" id="absent-${student.id}" autocomplete="off" ${!isPresent ? 'checked' : ''}>
+                                <label class="btn btn-outline-danger" for="absent-${student.id}">غیاب</label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                studentsList.appendChild(studentCard);
+            });
+
+            updateAttendanceCount();
+        }
+        
+        // نوێکردنەوەی ژمارەی حەضر و غیاب
+        function updateAttendanceCount() {
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            // فیلتەرکردنی قوتابیان بە هەمان شێوە
+            let filteredStudents = students;
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+            
+            const presentCount = document.querySelectorAll('input[type="radio"]:checked.btn-check').length;
+            const absentCount = filteredStudents.length - presentCount;
+            
+            document.getElementById('presentCount').textContent = presentCount;
+            document.getElementById('absentCount').textContent = absentCount;
+        }
+        
+        // پاشەکەوتکردنی غیابات
+        function saveAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            if (!date || !course) {
+                alert('تکایە بەروار و ناوی وانە پڕبکەرەوە!');
+                return;
+            }
+            
+            // فیلتەرکردنی قوتابیان بە هەمان شێوە
+            let filteredStudents = students;
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+            
+            // سڕینەوەی هەموو غیابەکانی پێشوو بۆ ئەم بەروارە و وانەیە
+            attendance = attendance.filter(a => !(a.date === date && a.course === course));
+            
+            // زیادکردنی غیابە نوێیەکان
+            filteredStudents.forEach(student => {
+                const isPresent = document.getElementById(`present-${student.id}`)?.checked || false;
+                
+                const attendanceRecord = {
+                    id: `${student.id}-${date}-${course}`,
+                    studentId: student.id,
+                    studentName: student.name,
+                    date: date,
+                    course: course,
+                    present: isPresent,
+                    timestamp: new Date().toISOString()
+                };
+                
+                attendance.push(attendanceRecord);
+            });
+            
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            alert('غیابات بە سەرکەوتوویی پاشەکەوت کرا!');
+        }
+        
+        // نیشانەکردنی هەموو حەضر
+        function markAllPresent() {
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            let filteredStudents = students;
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+            
+            filteredStudents.forEach(student => {
+                const presentRadio = document.getElementById(`present-${student.id}`);
+                if (presentRadio) {
+                    presentRadio.checked = true;
+                    
+                    // نوێکردنەوەی ڕەنگی کارت
+                    const card = presentRadio.closest('.student-card');
+                    if (card) {
+                        card.classList.remove('absent');
+                        card.classList.add('present');
+                    }
+                }
+            });
+            updateAttendanceCount();
+        }
+        
+        // نیشانەکردنی هەموو غیاب
+        function markAllAbsent() {
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            let filteredStudents = students;
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+            
+            filteredStudents.forEach(student => {
+                const absentRadio = document.getElementById(`absent-${student.id}`);
+                if (absentRadio) {
+                    absentRadio.checked = true;
+                    
+                    // نوێکردنەوەی ڕەنگی کارت
+                    const card = absentRadio.closest('.student-card');
+                    if (card) {
+                        card.classList.remove('present');
+                        card.classList.add('absent');
+                    }
+                }
+            });
+            updateAttendanceCount();
+        }
+        
+        // هەناردنی ڕاپۆرتی غیابات
+        function exportAttendanceReport() {
+            const date = document.getElementById('attendanceDate').value;
+            const course = document.getElementById('attendanceCourse').value;
+            const selectedLevel = document.getElementById('attendanceLevel').value;
+            const selectedGroup = document.getElementById('attendanceGroup').value;
+            
+            if (!date || !course) {
+                alert('تکایە بەروار و ناوی وانە پڕبکەرەوە!');
+                return;
+            }
+            
+            // فیلتەرکردنی قوتابیان بە هەمان شێوە
+            let filteredStudents = students;
+            if (selectedLevel) {
+                filteredStudents = filteredStudents.filter(student => student.level === selectedLevel);
+            }
+            if (selectedGroup) {
+                filteredStudents = filteredStudents.filter(student => student.group === selectedGroup);
+            }
+            
+            const todayAttendance = attendance.filter(a => 
+                a.date === date && 
+                a.course === course &&
+                filteredStudents.find(s => s.id === a.studentId)
+            );
+            
+            if (todayAttendance.length === 0) {
+                alert('هیچ زانیاریەکی غیابات بۆ ئەم بەروارە نییە!');
+                return;
+            }
+            
+            let presentCount = 0;
+            let absentCount = 0;
+            
+            let reportContent = `
+                <h2 style="text-align: center; color: #4e73df;">ڕاپۆرتی غیابات</h2>
+                <h3 style="text-align: center;">${course}</h3>
+                <p style="text-align: center;"><strong>بەروار:</strong> ${date}</p>
+                ${selectedLevel ? `<p style="text-align: center;"><strong>قۆناغ:</strong> ${selectedLevel}</p>` : ''}
+                ${selectedGroup ? `<p style="text-align: center;"><strong>گروپ:</strong> ${selectedGroup}</p>` : ''}
+                <hr>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #4e73df; color: white;">
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">ناوی قوتابی</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">ناوی باوک</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">قۆناغ</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">گروپ</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">دۆخ</th>
+                            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">وێنە</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            todayAttendance.forEach(record => {
+                const student = students.find(s => s.id === record.studentId);
+                if (student) {
+                    if (record.present) presentCount++;
+                    else absentCount++;
+                    
+                    reportContent += `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${student.name}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${student.fatherName}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${student.level}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${student.group}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${record.present ? 'green' : 'red'}">${record.present ? 'حەضر' : 'غیاب'}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${record.photo ? '✅' : '❌'}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            reportContent += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; padding: 10px; background-color: #f8f9fc; border-radius: 5px;">
+                    <p style="text-align: center;"><strong>کۆی قوتابیان:</strong> ${todayAttendance.length}</p>
+                    <p style="text-align: center;"><strong>ژمارەی حەضر:</strong> ${presentCount}</p>
+                    <p style="text-align: center;"><strong>ژمارەی غیاب:</strong> ${absentCount}</p>
+                </div>
+                <div style="margin-top: 20px; text-align: left;">
+                    <p><strong>بەرواری هەناردن:</strong> ${new Date().toLocaleDateString('ar-KU')}</p>
+                </div>
+            `;
+            
+            // دروستکردنی پەڕە و چاپکردن
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <title>ڕاپۆرتی غیابات</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                        th { background-color: #f2f2f2; }
+                        @media print {
+                            body { margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${reportContent}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        
+        // تەوگڵی تەنیشت
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebarMenu').classList.toggle('collapse');
+        });
+        
+        // نوێکردنەوەی ژمارەی حەضر و غیاب کاتێک گۆڕانکاری ڕوودەدات
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'radio' && e.target.name.startsWith('attendance-')) {
+                updateAttendanceCount();
+                
+                // گۆڕینی ڕەنگی کارتەکە
+                const card = e.target.closest('.student-card');
+                if (card) {
+                    if (e.target.id.startsWith('present-')) {
+                        card.classList.remove('absent');
+                        card.classList.add('present');
+                    } else {
+                        card.classList.remove('present');
+                        card.classList.add('absent');
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
